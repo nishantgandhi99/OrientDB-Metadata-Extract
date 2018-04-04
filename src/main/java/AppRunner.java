@@ -23,7 +23,7 @@ public class AppRunner {
             Statement stmt = conn.createStatement();
 
             ResultSet rs = stmt.executeQuery("SELECT from (select expand(classes) from metadata:schema) "
-                    + "where \"V\" in superClass;");
+                    + "where \"V\" in superClass or \"E\" in superClass;");
             print(rs);
             rs.close();
             rs = stmt.executeQuery("SELECT name from (select expand(classes) from metadata:schema) "
@@ -60,7 +60,7 @@ public class AppRunner {
 
             String col_name = md.getColumnName(i);
 
-            System.out.print(col_name + " || ");
+            System.out.print(col_name + "|");
         }
         System.out.println();
         while (rs.next()) {
@@ -69,7 +69,7 @@ public class AppRunner {
 
                 String col_name = md.getColumnName(i);
 
-                System.out.print(rs.getNString(col_name) + " || ");
+                System.out.print(rs.getNString(col_name) + "|");
             }
             System.out.println();
         }
