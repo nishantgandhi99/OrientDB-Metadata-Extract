@@ -8,18 +8,29 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Properties;
+import java.util.Scanner;
 
 public class AppRunner {
 
     public static void main(String[] args) {
 
         try {
+            Scanner sc = new Scanner(System.in);
+            System.out.println("Enter Username");
+            String username = sc.next();
+            System.out.println("Enter Password");
+            String pwd = sc.next();
+            System.out.println("Enter Database name");
+            String db = sc.next();
+            
+            
+            
             Class.forName("com.orientechnologies.orient.jdbc.OrientJdbcDriver");
 
             Properties info = new Properties();
-            info.put("user", "admin");
-            info.put("password", "admin");
-            Connection conn = DriverManager.getConnection("jdbc:orient:remote:localhost/OpenBeer", info);//TO DO: OpenBeer will be configurable
+            info.put("user", username);
+            info.put("password", pwd);
+            Connection conn = DriverManager.getConnection("jdbc:orient:remote:localhost/"+db, info);//TO DO: OpenBeer will be configurable
             Statement stmt = conn.createStatement();
 
             ResultSet rs = stmt.executeQuery("SELECT from (select expand(classes) from metadata:schema) "
