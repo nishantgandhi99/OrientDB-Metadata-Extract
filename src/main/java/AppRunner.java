@@ -1,144 +1,60 @@
-
-import java.sql.Array;
+import org.apache.commons.cli.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.Scanner;
 
 public class AppRunner {
 
-    public static void main(String[] args) {
+    private static String DRIVER_NAME = "com.orientechnologies.orient.jdbc.OrientJdbcDriver";
+    private static String CONNECTION_STRING = "jdbc:orient:remote";
 
-        try {
-            Scanner sc = new Scanner(System.in);
-            System.out.println("Enter Username");
-            String username = sc.next();
-            System.out.println("Enter Password");
-            String pwd = sc.next();
-            System.out.println("Enter Database name");
-            String db = sc.next();
+    public static void main(String[] args) throws Exception {
 
-            Class.forName("com.orientechnologies.orient.jdbc.OrientJdbcDriver");
-
-            Properties info = new Properties();
-            info.put("user", username);
-            info.put("password", pwd);
-            Connection conn = DriverManager.getConnection("jdbc:orient:remote:localhost/" + db, info);//TO DO: OpenBeer will be configurable
-            Statement stmt = conn.createStatement();
-
-            ResultSet rs = stmt.executeQuery("SELECT from (select expand(classes) from metadata:schema) "
-                    + "where \"V\" in superClass or \"E\" in superClass;");
-            print(rs);
-            rs.close();
-            rs = stmt.executeQuery("SELECT name from (select expand(classes) from metadata:schema) "
-                    + "where \"V\" in superClass;");
-            ArrayList<String> tableList = new ArrayList<String>();
-            while (!rs.isLast()) {
-                rs.next();
-
-                String string = rs.getString("name");
-                tableList.add(string);
-            }
-            rs.close();
-            for (String s : tableList) {
-                System.out.println(s);
-                rs = stmt.executeQuery("select expand(properties) from (select expand(classes) from metadata:schema) "
-                        + "where name = '" + s + "'");
-                print(rs);
-            }
-
-            rs.close();
-            stmt.close();
-
-        } catch (Exception e) {
-            System.out.println(e);
+        CommandLine cmd = ConfigurationUtils.parseArgs(args);
+        if (null == cmd) {
+            return;
         }
 
-    }
+        Class.forName(DRIVER_NAME);
 
-    public static void print(ResultSet rs) throws SQLException {
-        ResultSetMetaData md = rs.getMetaData();
-        int colCount = md.getColumnCount();
+        Properties info = new Properties();
+        info.put("user", cmd.getOptionValue("u"));
+        info.put("password", cmd.getOptionValue("p"));
 
-        for (int i = 1; i <= colCount; i++) {
+        Connection conn = DriverManager.getConnection(CONNECTION_STRING + ":" + cmd.getOptionValue("h") +
+                "/" + cmd.getOptionValue("d"), info);
 
-            String col_name = md.getColumnName(i);
+        ArrayList<String> header = new ArrayList<>();
+        header.add("Database");
+        header.add("Entity");
+        header.add("Name");
+        header.add("Property");
+        ArrayList<Dataset> datasets = new ArrayList<>();
 
-            System.out.print(col_name + "|");
-        }
-        System.out.println();
+        Statement stmt = conn.createStatement();
+
+        ResultSet rs = stmt.executeQuery("SELECT from (select expand(classes) from metadata:schema) "
+                + "where \"V\" in superClass or \"E\" in superClass;");
+
         while (rs.next()) {
+            Dataset data = new Dataset(cmd.getOptionValue("d"), rs.getString("superClass"), rs.getString("name"));
 
-            for (int i = 1; i <= colCount; i++) {
+            datasets.add(data);
+        }
 
-                String col_name = md.getColumnName(i);
-                if (col_name.equals("type")) {
-                    System.out.print(type(rs.getNString(col_name)) + "|");
-                } else {
-                    System.out.print(rs.getNString(col_name) + "|");
-                }
+
+        for (int i = 0; i < datasets.size(); i++) {
+            rs = stmt.executeQuery("select expand(properties) from (select expand(classes) from metadata:schema) "
+                    + "where name = '" + datasets.get(i).name + "'");
+            while (rs.next()) {
+                datasets.get(i).addProperty("name", rs.getString("name"));
+                datasets.get(i).addProperty("type", DBUtils.type(rs.getString("type")));
             }
-            System.out.println();
+            System.out.println(datasets.get(i));
         }
+        CSVUtils.writeToFile(cmd.getOptionValue("e"), header, datasets, '|');
     }
-
-    private static String type(String num) {
-        switch (num) {
-            case "0":
-                return "Boolean";
-            case "1":
-                return "Integer";
-            case "2":
-                return "Short";
-            case "3":
-                return "Long";
-            case "4":
-                return "Float";
-            case "5":
-                return "Double";
-            case "6":
-                return "Datetime";
-            case "7":
-                return "String";
-            case "8":
-                return "Binary";
-            case "9":
-                return "Embedded";
-            case "10":
-                return "Embedded list";
-            case "11":
-                return "Embedded set";
-            case "12":
-                return "Embedded map";
-            case "13":
-                return "Link";
-            case "14":
-                return "Link list";
-            case "15":
-                return "Link set";
-            case "16":
-                return "Link map";
-            case "17":
-                return "Byte";
-            case "18":
-                return "Transient";
-            case "19":
-                return "Date";
-            case "20":
-                return "Custom";
-            case "21":
-                return "Decimal";
-            case "22":
-                return "LinkBag";
-            default:
-                return "Any";
-
-        }
-    }
-
 }
