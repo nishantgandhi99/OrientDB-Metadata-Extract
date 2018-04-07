@@ -1,4 +1,5 @@
 import org.apache.commons.cli.*;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -50,8 +51,7 @@ public class AppRunner {
             rs = stmt.executeQuery("select expand(properties) from (select expand(classes) from metadata:schema) "
                     + "where name = '" + datasets.get(i).name + "'");
             while (rs.next()) {
-                datasets.get(i).addProperty("name", rs.getString("name"));
-                datasets.get(i).addProperty("type", DBUtils.type(rs.getString("type")));
+                datasets.get(i).addProperty(rs.getString("name"), DBUtils.type(rs.getString("type")));
             }
             System.out.println(datasets.get(i));
         }
