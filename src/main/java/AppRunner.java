@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Properties;
 
 public class AppRunner {
@@ -38,15 +39,31 @@ public class AppRunner {
 
         Statement stmt = conn.createStatement();
 
+        //TODO: Find better way than this for excluding System Class from Metadata list
+        HashSet<String> systemClass = new HashSet<>();
+        systemClass.add("OFunction");
+        systemClass.add("OIdentity");
+        systemClass.add("ORestricted");
+        systemClass.add("ORole");
+        systemClass.add("OSchedule");
+        systemClass.add("OSequence");
+        systemClass.add("OTriggered");
+        systemClass.add("OUser");
+        systemClass.add("OShape");
+        systemClass.add("_studio");
+
         ResultSet rs = stmt.executeQuery("SELECT from (select expand(classes) from metadata:schema) "
-                + "where \"V\" in superClass or \"E\" in superClass;");
+//                + "where \"V\" in superClass or \"E\" in superClass;"
+        );
 
         while (rs.next()) {
-            Dataset data = new Dataset(cmd.getOptionValue("d"), rs.getString("superClass"), rs.getString("name"));
-
-            datasets.add(data);
+            if (!systemClass.contains(rs.getString("name"))) {
+                if (!systemClass.contains(rs.getString("superClass"))) {
+                    Dataset data = new Dataset(cmd.getOptionValue("d"), rs.getString("superClass"), rs.getString("name"));
+                    datasets.add(data);
+                }
+            }
         }
-
 
         for (int i = 0; i < datasets.size(); i++) {
             rs = stmt.executeQuery("select expand(properties) from (select expand(classes) from metadata:schema) "
