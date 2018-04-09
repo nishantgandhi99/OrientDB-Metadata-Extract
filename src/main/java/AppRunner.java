@@ -32,7 +32,8 @@ public class AppRunner {
         header.add("Database");
         header.add("Entity");
         header.add("Name");
-        header.add("Property");
+        header.add("PropertyName");
+        header.add("PropertyValue");
         ArrayList<Dataset> datasets = new ArrayList<>();
 
         Statement stmt = conn.createStatement();
@@ -55,6 +56,6 @@ public class AppRunner {
             }
             System.out.println(datasets.get(i));
         }
-        CSVUtils.writeToFile(cmd.getOptionValue("e"), header, datasets, '|');
+        CSVUtils.writeToFile(cmd.getOptionValue("e"), header, datasets, ',');
     }
 }

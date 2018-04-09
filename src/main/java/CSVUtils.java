@@ -1,8 +1,9 @@
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 public class CSVUtils {
 
@@ -20,16 +21,28 @@ public class CSVUtils {
             writer.append(NEW_LINE_SEPARATOR);
 
             for(int i=0; i<rows.size();i++) {
+
                 writer.append(rows.get(i).database);
                 writer.append(separators);
                 writer.append(rows.get(i).entity);
                 writer.append(separators);
                 writer.append(rows.get(i).name);
-                writer.append(separators);
-                Gson gson = new Gson();
-                String jsonProperties = gson.toJson(rows.get(i).properties);
-                writer.append(jsonProperties);
                 writer.append(NEW_LINE_SEPARATOR);
+
+                Iterator it = rows.get(i).properties.entrySet().iterator();
+                while(it.hasNext()){
+                    Map.Entry pair = (Map.Entry)it.next();
+                    writer.append(rows.get(i).database);
+                    writer.append(separators);
+                    writer.append(rows.get(i).entity);
+                    writer.append(separators);
+                    writer.append(rows.get(i).name);
+                    writer.append(separators);
+                    writer.append(pair.getKey().toString());
+                    writer.append(separators);
+                    writer.append(pair.getValue().toString());
+                    writer.append(NEW_LINE_SEPARATOR);
+                }
             }
 
             writer.flush();
