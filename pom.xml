@@ -40,8 +40,13 @@
                             </goals>
                             <configuration>
                                 <transformers>
+                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer">
+                                        <!--<mainClass>AppRunner</mainClass>-->
+                                    </transformer>
                                     <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                        <mainClass>AppRunner</mainClass>
+                                    <manifestEntries>
+                                        <Main-Class>AppRunner</Main-Class>
+                                    </manifestEntries>
                                     </transformer>
                                 </transformers>
                             </configuration>
